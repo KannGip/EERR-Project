@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5932808987934914734
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3673867106688261872}
+  - component: {fileID: 6385179899518446460}
+  m_Layer: 0
+  m_Name: cell_holder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3673867106688261872
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5932808987934914734}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.134312, y: -2.6370552, z: 7.0506773}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6385179899518446460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5932808987934914734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb9aff9ea41aa3b448120b0b6ea1c48f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isCollapsed: 0
+  possiblePrototypes:
+  - {fileID: 11400000, guid: 9034d080b392e4043ae4ce3382f6ac39, type: 2}
+  - {fileID: 11400000, guid: 7592af1f0b198994d8d993a8c68a208f, type: 2}
+  - {fileID: 11400000, guid: f58ee88e98bf19c4eb510c16a4a2bbd9, type: 2}
+  - {fileID: 11400000, guid: d3baf0763d9304144bf81f6aad686373, type: 2}
+  - {fileID: 11400000, guid: 9310ad1a468095948866bc0e99dd6857, type: 2}
+  - {fileID: 11400000, guid: a37aa5e1956c0224289e61ffed2719b2, type: 2}
+  - {fileID: 11400000, guid: 042812d222993f4479df5377406a82ce, type: 2}
+  - {fileID: 11400000, guid: 4c77f4c5ae8e6db4d9438beb6cabf5b9, type: 2}
+  - {fileID: 11400000, guid: ca60782d4491656499f177c55108e396, type: 2}
+  - {fileID: 11400000, guid: fe9a222838fc95842af37af3d59a442a, type: 2}
+  - {fileID: 11400000, guid: 0e381ed759ef46841915dd675c1ea410, type: 2}
+  - {fileID: 11400000, guid: c881e5327f5062c47896ce3770e98e92, type: 2}
+  - {fileID: 11400000, guid: 16b73dbcd0dcced419e2cb12f63b93ef, type: 2}
+  - {fileID: 11400000, guid: 51be171531ff6224cadf7eb33dd76b95, type: 2}
+  - {fileID: 11400000, guid: 223f860103207e84f9835495a2e4c68e, type: 2}
+  - {fileID: 11400000, guid: 0aeb580f82816dd4aaf29f280598a873, type: 2}
+  prototypeWeights: 
+  coords: {x: 0, y: 0}
+  posXneighbour: {fileID: 0}
+  negXneighbour: {fileID: 0}
+  posZneighbour: {fileID: 0}
+  negZneighbour: {fileID: 0}
+  meshFilter: {fileID: 0}
+  meshRenderer: {fileID: 0}
