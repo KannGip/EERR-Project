@@ -43,7 +43,9 @@ public class PrototypeGenerator : MonoBehaviour
 
                 newProto.prefab = protoypePrefabs[i].prefab;
                 newProto.isWalkable = protoypePrefabs[i].isWalkable;
-                newProto.directions = RotateDirections(protoypePrefabs[i].directions, j);
+                RotatePrototypeSockets(newProto, protoypePrefabs[i], j);
+                newProto.directions = CalculateDirectionsFromSockets(newProto);
+
                 
                 prototypes.Add(newProto);
                
@@ -59,7 +61,7 @@ public class PrototypeGenerator : MonoBehaviour
                 p.meshRotation = j;
                 p.attributes = specialStartPrefabs[i].attributes;
                 CopyAndRotateSockets(p, specialStartPrefabs[i], j);
-                p.directions = RotateDirections(specialStartPrefabs[i].directions, j);
+                p.directions = CalculateDirectionsFromSockets(p);
                 startPrototypes.Add(ScriptableObject.Instantiate(p));
             }
         }
@@ -73,7 +75,7 @@ public class PrototypeGenerator : MonoBehaviour
                 p.meshRotation = j;
                 p.attributes = specialEndPrefabs[i].attributes;
                 CopyAndRotateSockets(p, specialEndPrefabs[i], j);
-                p.directions = RotateDirections(specialEndPrefabs[i].directions, j);
+                p.directions = CalculateDirectionsFromSockets(p);
                 endPrototypes.Add(ScriptableObject.Instantiate(p));
             }
         }
@@ -223,6 +225,7 @@ public class PrototypeGenerator : MonoBehaviour
         }
     }
 
+/*
     private DirectionFlags RotateDirections(DirectionFlags original, int rotation)
     {
         DirectionFlags result = original;
@@ -237,6 +240,40 @@ public class PrototypeGenerator : MonoBehaviour
         }
         return result;
     }
+*/
 
+    private void RotatePrototypeSockets(Prototype target, Prototype original, int rotation)
+    {
+        WFC_Socket px = original.posX;
+        WFC_Socket nx = original.negX;
+        WFC_Socket pz = original.posZ;
+        WFC_Socket nz = original.negZ;
+
+        switch (rotation % 4)
+        {
+            case 0:
+                target.posX = px; target.negX = nx; target.posZ = pz; target.negZ = nz;
+                break;
+            case 1:
+                target.posX = nz; target.negX = pz; target.posZ = px; target.negZ = nx;
+                break;
+            case 2:
+                target.posX = nx; target.negX = px; target.posZ = nz; target.negZ = pz;
+                break;
+            case 3:
+                target.posX = pz; target.negX = nz; target.posZ = nx; target.negZ = px;
+                break;
+        }
+    }
+
+    private DirectionFlags CalculateDirectionsFromSockets(Prototype proto)
+    {
+        DirectionFlags flags = DirectionFlags.None;
+        if (proto.posX != WFC_Socket.None) flags |= DirectionFlags.PosX;
+        if (proto.negX != WFC_Socket.None) flags |= DirectionFlags.NegX;
+        if (proto.posZ != WFC_Socket.None) flags |= DirectionFlags.PosZ;
+        if (proto.negZ != WFC_Socket.None) flags |= DirectionFlags.NegZ;
+        return flags;
+    }
 
 }
