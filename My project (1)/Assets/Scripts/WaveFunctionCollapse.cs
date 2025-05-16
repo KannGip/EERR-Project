@@ -27,36 +27,41 @@ public class WaveFunctionCollapse : MonoBehaviour
         //InitializeWaveFunction();
     }
     
-    public void InitializeWaveFunction()
-    {   
+ public void InitializeWaveFunction()
+    {
         ClearAll();
-        for (int x = 0, y = 0; x < size.x; x++)
+        int childIndex = 0;
+        for (int x = 0; x < size.x; x++)
         {
             for (int z = 0; z < size.y; z++)
             {
-                Vector3 pos = new Vector3(x* gridOffset + startPosition.x, 0, z * gridOffset + startPosition.z);
+                Vector3 pos = new Vector3(x * gridOffset + startPosition.x, 0, z * gridOffset + startPosition.z);
 
-                if(this.gameObject.transform.childCount>y)//kinda breaks
+                GameObject block;
+                if (this.transform.childCount > childIndex)
                 {
-                    GameObject block = this.transform.GetChild(y).gameObject;
+                    block = this.transform.GetChild(childIndex).gameObject;
                     block.SetActive(true);
-                    block.transform.position = pos;        
+                    block.transform.position = pos;
                 }
                 else
                 {
-                    GameObject block = Instantiate(allProtoPrefab, pos, Quaternion.identity, this.transform);
+                    block = Instantiate(allProtoPrefab, pos, Quaternion.identity, this.transform);
                 }
-                Cell cell = this.transform.GetChild(y).gameObject.GetComponent<Cell>();
-                cell.coords = new Vector2(x,z);
+
+                Cell cell = block.GetComponent<Cell>();
+                cell.coords = new Vector2(x, z);
                 cells.Add(cell);
                 activeCells.Add(cell.coords, cell);
-                y++;
+
+                childIndex++;
             }
         }
-        foreach(Cell c in cells)
+
+        foreach (Cell c in cells)
             FindNeighbours(c);
 
-        foreach(Cell c in cells)
+        foreach (Cell c in cells)
             c.GenerateWeight(weights);
 
         StartCollapse();
@@ -91,7 +96,7 @@ public class WaveFunctionCollapse : MonoBehaviour
         int z = (int)cell.coords.y;
 
         map.isWalkable[x, z] = proto.isWalkable; 
-        
+
         Debug.Log($"[Export] ({x},{z}) Proto: {proto.name} | posX:{proto.posX}, negX:{proto.negX}, posZ:{proto.posZ}, negZ:{proto.negZ}");
 
         DirectionFlags flags = DirectionFlags.None;
