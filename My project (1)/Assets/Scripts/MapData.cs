@@ -20,29 +20,38 @@ public class MapData
     public Vector2Int endPoint;
 
     public void ChooseRandomStartAndEnd()
-    {  
+    {
         List<Vector2Int> walkableTiles = new List<Vector2Int>();
 
         for (int x = 0; x < isWalkable.GetLength(0); x++)
         {
             for (int z = 0; z < isWalkable.GetLength(1); z++)
             {
-                if (isWalkable[x, z] && walkableDirections[x, z] != DirectionFlags.None)
-                {
+                if (!isWalkable[x, z]) continue;
+
+                var dirs = walkableDirections[x, z];
+
+                int count = 0;
+                if (dirs.HasFlag(DirectionFlags.PosX)) count++;
+                if (dirs.HasFlag(DirectionFlags.NegX)) count++;
+                if (dirs.HasFlag(DirectionFlags.PosZ)) count++;
+                if (dirs.HasFlag(DirectionFlags.NegZ)) count++;
+
+                // En az 2 yön varsa bu hücreyi aday olarak al
+                if (count >= 2)
                     walkableTiles.Add(new Vector2Int(x, z));
-                }
             }
         }
 
         if (walkableTiles.Count < 2)
         {
-            Debug.LogWarning("❌ Not enough valid tiles with direction to choose start and end points.");
+            Debug.LogWarning("❌ Not enough valid tiles with multiple directions to choose start and end points.");
             return;
         }
 
         startPoint = walkableTiles[Random.Range(0, walkableTiles.Count)];
 
-        // Pick end point far from start
+        // Bitiş noktasını mümkün olduğunca uzak seç
         int attempts = 0;
         do
         {
@@ -52,9 +61,9 @@ public class MapData
         while (Vector2Int.Distance(startPoint, endPoint) < 5 && attempts < 100);
 
         if (attempts >= 100)
-        Debug.LogWarning("⚠️ Could not find a distant enough endpoint after 100 tries.");
+            Debug.LogWarning("⚠️ Could not find a distant enough endpoint after 100 tries.");
 
-        Debug.Log($" Start: {startPoint}, End: {endPoint}");
+        Debug.Log($"🧭 Start: {startPoint}, End: {endPoint}");
     }
 
 

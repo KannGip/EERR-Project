@@ -90,49 +90,26 @@ public class PrototypeGenerator : MonoBehaviour
         #endif
 
     }
-    public void UpdatePrototypes()
+public void UpdatePrototypes()
+{
+    for (int i = 0; i < protoypePrefabs.Count; i++)
     {
-        // Generate rotations for all prototypes
-        for (int i = 0; i < protoypePrefabs.Count; i++)
+        for (int j = 0; j < 4; j++)
         {
-            for (int j = 0; j < 4; j++)
-            {
-                prototypes[i*4+j].prefab = protoypePrefabs[i].prefab;
-                prototypes[i*4+j].validNeighbours = new NeighbourList();
-                prototypes[i*4+j].meshRotation = j;
-                prototypes[i*4+j].attributes = protoypePrefabs[i].attributes;
+            int index = i * 4 + j;
+            var proto = prototypes[index];
 
-                prototypes[i*4+j].posX = protoypePrefabs[i].posX;
-                prototypes[i*4+j].negX = protoypePrefabs[i].negX;
-                prototypes[i*4+j].posZ = protoypePrefabs[i].posZ;
-                prototypes[i*4+j].negZ = protoypePrefabs[i].negZ;
+            proto.prefab = protoypePrefabs[i].prefab;
+            proto.isWalkable = protoypePrefabs[i].isWalkable;
+            proto.meshRotation = j;
+            proto.attributes = protoypePrefabs[i].attributes;
 
-                if(j==0)
-                {
-                    posXHolder = prototypes[i*4+j].posX;
-                    negXHolder = prototypes[i*4+j].negX;
-                    posZHolder = prototypes[i*4+j].posZ;
-                    negZHolder = prototypes[i*4+j].negZ;
-                }
-                else
-                {
-                    prototypes[i*4+j].negZ = posXHolder;
-                    prototypes[i*4+j].negX = negZHolder;
-                    prototypes[i*4+j].posZ = negXHolder;
-                    prototypes[i*4+j].posX = posZHolder;
-
-                    posXHolder = prototypes[i*4+j].posX;
-                    negXHolder = prototypes[i*4+j].negX;
-                    posZHolder = prototypes[i*4+j].posZ;
-                    negZHolder = prototypes[i*4+j].negZ;
-                }
-            }
+            // ✅ Yönleri yeniden hesapla
+            proto.directions = CalculateDirectionsFromSockets(proto);
+            proto.validNeighbours = GetValidNeighbors(proto);
         }
-
-        // // Generate valid neighbors
-        for (int i = 0; i < prototypes.Count; i++)
-            prototypes[i].validNeighbours = GetValidNeighbors(prototypes[i]);
     }
+}
 
     private void CopyAndRotateSockets(Prototype target, Prototype source, int rotation)
     {

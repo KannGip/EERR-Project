@@ -95,21 +95,31 @@ public class WaveFunctionCollapse : MonoBehaviour
             int x = (int)cell.coords.x;
             int z = (int)cell.coords.y;
 
-            map.isWalkable[x, z] = proto.isWalkable;
-
-            Debug.Log($"[Export] ({x},{z}) Proto: {proto.name} | posX:{proto.posX}, negX:{proto.negX}, posZ:{proto.posZ}, negZ:{proto.negZ}");
-
             DirectionFlags flags = DirectionFlags.None;
             if (proto.posX != WFC_Socket.None) flags |= DirectionFlags.PosX;
             if (proto.negX != WFC_Socket.None) flags |= DirectionFlags.NegX;
             if (proto.posZ != WFC_Socket.None) flags |= DirectionFlags.PosZ;
             if (proto.negZ != WFC_Socket.None) flags |= DirectionFlags.NegZ;
 
+            // 🧱 Direction bilgisi yoksa, yürünemez say
+            if (flags == DirectionFlags.None)
+            {
+                map.isWalkable[x, z] = false;
+                Debug.LogWarning($"🚫 No direction flags for ({x},{z}) → {proto.name}, setting unwalkable.");
+            }
+            else
+            {
+                map.isWalkable[x, z] = proto.isWalkable;
+            }
+
             map.walkableDirections[x, z] = flags;
+
+            Debug.Log($"[Export] ({x},{z}) Proto: {proto.name} | posX:{proto.posX}, negX:{proto.negX}, posZ:{proto.posZ}, negZ:{proto.negZ} → Flags: {flags}");
         }
 
         return map;
     }
+
 
     //[ContextMenu("Randomize Buildings")]
 
