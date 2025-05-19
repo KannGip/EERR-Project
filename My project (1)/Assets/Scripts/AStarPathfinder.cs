@@ -78,17 +78,24 @@ public static class AStarPathfinder
         int width = grid.GetLength(0);
         int height = grid.GetLength(1);
 
-        for (int dx = -1; dx <= 1; dx++)
+        Vector2Int[] directions = new Vector2Int[]
         {
-            for (int dy = -1; dy <= 1; dy++)
+        new Vector2Int( 0,  1), // up
+        new Vector2Int( 0, -1), // down
+        new Vector2Int( 1,  0), // right
+        new Vector2Int(-1,  0), // left
+        };
+
+        foreach (var dir in directions)
+        {
+            int checkX = node.gridX + dir.x;
+            int checkY = node.gridY + dir.y;
+
+            if (checkX >= 0 && checkX < width && checkY >= 0 && checkY < height)
             {
-                if (dx == 0 && dy == 0) continue;
-
-                int checkX = node.gridX + dx;
-                int checkY = node.gridY + dy;
-
-                if (checkX >= 0 && checkX < width && checkY >= 0 && checkY < height)
-                    neighbors.Add(grid[checkX, checkY]);
+                GridNode neighbor = grid[checkX, checkY];
+                if (neighbor != null)
+                    neighbors.Add(neighbor);
             }
         }
 
