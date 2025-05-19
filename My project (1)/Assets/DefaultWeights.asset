@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fb6175c21f63f8418f2a6fee2b5b280, type: 3}
   m_Name: DefaultWeights
   m_EditorClassIdentifier: 
-  intersectionWeight: 2
+  intersectionWeight: 1
   roadStraightWeight: 5
   grassWeight: 7
-  roadTurnWeight: 4
+  roadTurnWeight: 5

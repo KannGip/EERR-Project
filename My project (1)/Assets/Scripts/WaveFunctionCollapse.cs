@@ -5,7 +5,7 @@ using UnityEditor;
 
 public class WaveFunctionCollapse : MonoBehaviour
 {
-    
+
     public GameObject allProtoPrefab;
     public float gridOffset = 1;
     public Vector2 size;
@@ -19,15 +19,16 @@ public class WaveFunctionCollapse : MonoBehaviour
     public MapData latestMapData;
     public List<Prototype> startPrototypes;
     public List<Prototype> endPrototypes;
+    public List<Prototype> earthquakePrototypes;
 
     void Start()
     {
-        
+
         //Debug.Log("WFC: Start called");
         //InitializeWaveFunction();
     }
-    
- public void InitializeWaveFunction()
+
+    public void InitializeWaveFunction()
     {
         ClearAll();
         int childIndex = 0;
@@ -70,49 +71,51 @@ public class WaveFunctionCollapse : MonoBehaviour
         recordedMap.ChooseRandomStartAndEnd();
         ReplacePrototypeAt(recordedMap.startPoint, prototypeGenerator.startPrototypes);
         ReplacePrototypeAt(recordedMap.endPoint, prototypeGenerator.endPrototypes);
+        earthquakePrototypes = prototypeGenerator.earthquakePrototypes;
+        EarthquakeGenerator.ApplyEarthquake(recordedMap, this, 0.02f);
         latestMapData = recordedMap;
         recordedMap.PrintToConsole();
         //CreateBorder();
         //RandomizeBuildings();
     }
- public MapData ExportToPathfindingData()
-{
-    int width = (int)size.x;
-    int height = (int)size.y;
-
-    var map = new MapData
+    public MapData ExportToPathfindingData()
     {
-        isWalkable = new bool[width, height],
-        walkableDirections = new DirectionFlags[width, height]
-    };
+        int width = (int)size.x;
+        int height = (int)size.y;
 
-    foreach (var cell in cells)
-    {
-        if (!cell.isCollapsed || cell.possiblePrototypes.Count == 0)
-            continue;
+        var map = new MapData
+        {
+            isWalkable = new bool[width, height],
+            walkableDirections = new DirectionFlags[width, height]
+        };
 
-        var proto = cell.possiblePrototypes[0];
-        int x = (int)cell.coords.x;
-        int z = (int)cell.coords.y;
+        foreach (var cell in cells)
+        {
+            if (!cell.isCollapsed || cell.possiblePrototypes.Count == 0)
+                continue;
 
-        map.isWalkable[x, z] = proto.isWalkable; 
+            var proto = cell.possiblePrototypes[0];
+            int x = (int)cell.coords.x;
+            int z = (int)cell.coords.y;
 
-        Debug.Log($"[Export] ({x},{z}) Proto: {proto.name} | posX:{proto.posX}, negX:{proto.negX}, posZ:{proto.posZ}, negZ:{proto.negZ}");
+            map.isWalkable[x, z] = proto.isWalkable;
 
-        DirectionFlags flags = DirectionFlags.None;
-        if (proto.posX != WFC_Socket.None) flags |= DirectionFlags.PosX;
-        if (proto.negX != WFC_Socket.None) flags |= DirectionFlags.NegX;
-        if (proto.posZ != WFC_Socket.None) flags |= DirectionFlags.PosZ;
-        if (proto.negZ != WFC_Socket.None) flags |= DirectionFlags.NegZ;
+            Debug.Log($"[Export] ({x},{z}) Proto: {proto.name} | posX:{proto.posX}, negX:{proto.negX}, posZ:{proto.posZ}, negZ:{proto.negZ}");
 
-        map.walkableDirections[x, z] = flags;
+            DirectionFlags flags = DirectionFlags.None;
+            if (proto.posX != WFC_Socket.None) flags |= DirectionFlags.PosX;
+            if (proto.negX != WFC_Socket.None) flags |= DirectionFlags.NegX;
+            if (proto.posZ != WFC_Socket.None) flags |= DirectionFlags.PosZ;
+            if (proto.negZ != WFC_Socket.None) flags |= DirectionFlags.NegZ;
+
+            map.walkableDirections[x, z] = flags;
+        }
+
+        return map;
     }
 
-    return map;
-}
-
     //[ContextMenu("Randomize Buildings")]
-    
+
     /*
     public void RandomizeBuildings()
     {
@@ -121,21 +124,22 @@ public class WaveFunctionCollapse : MonoBehaviour
             b.RandomizeBuilding();
     } 
     */
-    private void DoInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent) {
-         Transform temp = ((GameObject)Instantiate(prefab,position,rotation)).transform;
-         temp.parent = parent;
-     }
+    private void DoInstantiate(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent)
+    {
+        Transform temp = ((GameObject)Instantiate(prefab, position, rotation)).transform;
+        temp.parent = parent;
+    }
     private void FindNeighbours(Cell c)
     {
-        c.posZneighbour = GetCell(c.coords.x,c.coords.y+1);
-        c.negZneighbour = GetCell(c.coords.x,c.coords.y-1);
-        c.posXneighbour = GetCell(c.coords.x+1,c.coords.y);
-        c.negXneighbour = GetCell(c.coords.x-1,c.coords.y);
+        c.posZneighbour = GetCell(c.coords.x, c.coords.y + 1);
+        c.negZneighbour = GetCell(c.coords.x, c.coords.y - 1);
+        c.posXneighbour = GetCell(c.coords.x + 1, c.coords.y);
+        c.negXneighbour = GetCell(c.coords.x - 1, c.coords.y);
     }
     private Cell GetCell(float x, float z)
     {
         Cell cell = null;
-        if(activeCells.TryGetValue(new Vector2(x,z), out cell))
+        if (activeCells.TryGetValue(new Vector2(x, z), out cell))
             return cell;
         else
             return null;
@@ -143,13 +147,13 @@ public class WaveFunctionCollapse : MonoBehaviour
     int collapsed;
     public void StartCollapse()
     {
-        collapsed=0;
-        while(!isCollapsed())
+        collapsed = 0;
+        while (!isCollapsed())
             Iterate();
     }
     public IEnumerator CollapseOverTime()
     {
-        while(!isCollapsed())
+        while (!isCollapsed())
         {
             Iterate();
             yield return new WaitForSeconds(0.5f);
@@ -158,8 +162,8 @@ public class WaveFunctionCollapse : MonoBehaviour
     private bool isCollapsed()
     {
         //check if any cells contain more than one entry
-        foreach(Cell c in cells)
-            if(c.possiblePrototypes.Count>1)
+        foreach (Cell c in cells)
+            if (c.possiblePrototypes.Count > 1)
                 return false;
 
         return true;
@@ -176,15 +180,15 @@ public class WaveFunctionCollapse : MonoBehaviour
         List<Cell> cellWithLowestEntropy = new List<Cell>();
         int x = 100000;
 
-        foreach(Cell c in cells)
+        foreach (Cell c in cells)
         {
-            if(!c.isCollapsed)
+            if (!c.isCollapsed)
             {
-                if(c.possiblePrototypes.Count==x)
+                if (c.possiblePrototypes.Count == x)
                 {
                     cellWithLowestEntropy.Add(c);
                 }
-                else if(c.possiblePrototypes.Count<x)
+                else if (c.possiblePrototypes.Count < x)
                 {
                     cellWithLowestEntropy.Clear();
                     cellWithLowestEntropy.Add(c);
@@ -202,9 +206,9 @@ public class WaveFunctionCollapse : MonoBehaviour
         cell.possiblePrototypes.Clear();
         cell.possiblePrototypes.Add(finalPrototype);
         GameObject finalPrefab = Instantiate(finalPrototype.prefab, cell.transform, true);
-        finalPrefab.transform.Rotate(new Vector3(0f, finalPrototype.meshRotation*90, 0f), Space.Self);
+        finalPrefab.transform.Rotate(new Vector3(0f, finalPrototype.meshRotation * 90, 0f), Space.Self);
         finalPrefab.transform.localPosition = Vector3.zero;
-        cell.name = cell.coords.ToString()+"_"+ collapsed.ToString();
+        cell.name = cell.coords.ToString() + "_" + collapsed.ToString();
         collapsed++;
         cell.isCollapsed = true;
     }
@@ -216,21 +220,21 @@ public class WaveFunctionCollapse : MonoBehaviour
         //pick a random value 0-allAtributes weight
         //if less than the random number, return it, else keep going
         int total = 0;
-        foreach(int weight in prototypeWeights)
-            total+=weight;
+        foreach (int weight in prototypeWeights)
+            total += weight;
 
         total = Random.Range(0, total);
 
-        foreach(int weight in prototypeWeights)
+        foreach (int weight in prototypeWeights)
         {
             for (int i = 0; i < prototypeWeights.Count; i++)
             {
-                if(total<=prototypeWeights[i])
+                if (total <= prototypeWeights[i])
                 {
                     return i;
                 }
                 else
-                    total-=weight;
+                    total -= weight;
             }
         }
         return 0;
@@ -239,14 +243,14 @@ public class WaveFunctionCollapse : MonoBehaviour
     {
         cellsAffected.Add(cell);
         int y = 0;
-        while(cellsAffected.Count > 0)
+        while (cellsAffected.Count > 0)
         {
             Cell currentCell = cellsAffected[0];
             cellsAffected.Remove(currentCell);
 
             //get neighbor to the right
             Cell otherCell = currentCell.posXneighbour;
-            if(otherCell!=null)
+            if (otherCell != null)
             {
                 //Get sockets that we have available on our Right
                 List<WFC_Socket> possibleConnections = GetPossibleSocketsPosX(currentCell.possiblePrototypes);
@@ -255,74 +259,74 @@ public class WaveFunctionCollapse : MonoBehaviour
                 for (int i = 0; i < otherCell.possiblePrototypes.Count; i++)
                 {
                     //if the list of sockets that we have on the right does not contain the connector on the other cell to the left...
-                    if(!possibleConnections.Contains(otherCell.possiblePrototypes[i].negX))
+                    if (!possibleConnections.Contains(otherCell.possiblePrototypes[i].negX))
                     {
                         //then that is not a valid possibility and must be removed
                         otherCell.possiblePrototypes.RemoveAt(i);
                         otherCell.prototypeWeights.RemoveAt(i);
-                        i-=1;
+                        i -= 1;
                         constrained = true;
                     }
                 }
 
-                if(constrained)
+                if (constrained)
                     cellsAffected.Add(otherCell);
             }
 
             otherCell = currentCell.posZneighbour;
-            if(otherCell!=null)
+            if (otherCell != null)
             {
                 List<WFC_Socket> possibleConnections = GetPossibleSocketsPosZ(currentCell.possiblePrototypes);
                 bool hasBeenConstrained = false;
-        
+
                 //check all neighbours
                 for (int i = 0; i < otherCell.possiblePrototypes.Count; i++)
                 {
-                    if(!possibleConnections.Contains(otherCell.possiblePrototypes[i].negZ))
+                    if (!possibleConnections.Contains(otherCell.possiblePrototypes[i].negZ))
                     {
                         otherCell.possiblePrototypes.RemoveAt(i);
                         otherCell.prototypeWeights.RemoveAt(i);
-                        i-=1;
+                        i -= 1;
                         hasBeenConstrained = true;
                     }
                 }
-                if(hasBeenConstrained)
+                if (hasBeenConstrained)
                     cellsAffected.Add(otherCell);
             }
             otherCell = currentCell.negXneighbour;
-            if(otherCell!=null)
+            if (otherCell != null)
             {
                 List<WFC_Socket> possibleConnections = GetPossibleSocketsNegX(currentCell.possiblePrototypes);
                 bool hasBeenConstrained = false;
                 for (int i = 0; i < otherCell.possiblePrototypes.Count; i++)
                 {
-                    if(!possibleConnections.Contains(otherCell.possiblePrototypes[i].posX))
+                    if (!possibleConnections.Contains(otherCell.possiblePrototypes[i].posX))
                     {
                         otherCell.possiblePrototypes.RemoveAt(i);
                         otherCell.prototypeWeights.RemoveAt(i);
-                        i-=1;
+                        i -= 1;
                         hasBeenConstrained = true;
                     }
                 }
-                if(hasBeenConstrained)
+                if (hasBeenConstrained)
                     cellsAffected.Add(otherCell);
             }
             otherCell = currentCell.negZneighbour;
-            if(otherCell!=null)
+            if (otherCell != null)
             {
                 List<WFC_Socket> possibleConnections = GetPossibleSocketsNegZ(currentCell.possiblePrototypes);
                 bool hasBeenConstrained = false;
                 for (int i = 0; i < otherCell.possiblePrototypes.Count; i++)
                 {
-                    if(!possibleConnections.Contains(otherCell.possiblePrototypes[i].posZ))
+                    if (!possibleConnections.Contains(otherCell.possiblePrototypes[i].posZ))
                     {
                         otherCell.possiblePrototypes.RemoveAt(i);
                         otherCell.prototypeWeights.RemoveAt(i);
-                        i-=1;
+                        i -= 1;
                         hasBeenConstrained = true;
                     }
                 }
-                if(hasBeenConstrained)
+                if (hasBeenConstrained)
                     cellsAffected.Add(otherCell);
             }
             y++;
@@ -333,8 +337,8 @@ public class WaveFunctionCollapse : MonoBehaviour
         List<WFC_Socket> socketsAccepted = new List<WFC_Socket>();
         foreach (Prototype proto in prototypesAvailable)
         {
-            
-            if(!socketsAccepted.Contains(proto.negX))
+
+            if (!socketsAccepted.Contains(proto.negX))
                 socketsAccepted.Add(proto.negX);
         }
         return socketsAccepted;
@@ -344,7 +348,7 @@ public class WaveFunctionCollapse : MonoBehaviour
         List<WFC_Socket> socketsAccepted = new List<WFC_Socket>();
         foreach (Prototype proto in prototypesAvailable)
         {
-            if(!socketsAccepted.Contains(proto.negZ))
+            if (!socketsAccepted.Contains(proto.negZ))
                 socketsAccepted.Add(proto.negZ);
         }
         return socketsAccepted;
@@ -354,7 +358,7 @@ public class WaveFunctionCollapse : MonoBehaviour
         List<WFC_Socket> socketsAccepted = new List<WFC_Socket>();
         foreach (Prototype proto in prototypesAvailable)
         {
-            if(!socketsAccepted.Contains(proto.posZ))
+            if (!socketsAccepted.Contains(proto.posZ))
                 socketsAccepted.Add(proto.posZ);
         }
         return socketsAccepted;
@@ -364,31 +368,31 @@ public class WaveFunctionCollapse : MonoBehaviour
         List<WFC_Socket> socketsAccepted = new List<WFC_Socket>();
         foreach (Prototype proto in prototypesAvailable)
         {
-            if(!socketsAccepted.Contains(proto.posX))
+            if (!socketsAccepted.Contains(proto.posX))
             {
                 socketsAccepted.Add(proto.posX);
             }
         }
         return socketsAccepted;
     }
-    
+
     private bool Constrain(Cell otherCell, WFC_Socket socketItMustPairWith)
     {
         bool hasBeenConstrained = false;
-        
+
         //check all neighbours
         for (int i = 0; i < otherCell.possiblePrototypes.Count; i++)
         {
-            
+
         }
         return hasBeenConstrained;
     }
-    
+
     private bool HasAConnector(List<WFC_Socket> socketsAccepted, WFC_Socket thisSocket)
     {
         foreach (WFC_Socket s in socketsAccepted)
         {
-            if(s == thisSocket)
+            if (s == thisSocket)
                 return true;
         }
         return false;
@@ -398,13 +402,13 @@ public class WaveFunctionCollapse : MonoBehaviour
         List<WFC_Socket> socketsAccepted = new List<WFC_Socket>();
         foreach (Prototype proto in possibleNeighbors)
         {
-            if(!socketsAccepted.Contains(proto.posX))
+            if (!socketsAccepted.Contains(proto.posX))
                 socketsAccepted.Add(proto.posX);
-            if(!socketsAccepted.Contains(proto.negX))
+            if (!socketsAccepted.Contains(proto.negX))
                 socketsAccepted.Add(proto.negX);
-            if(!socketsAccepted.Contains(proto.posZ))
+            if (!socketsAccepted.Contains(proto.posZ))
                 socketsAccepted.Add(proto.posZ);
-            if(!socketsAccepted.Contains(proto.negZ))
+            if (!socketsAccepted.Contains(proto.negZ))
                 socketsAccepted.Add(proto.negZ);
         }
         return socketsAccepted;
@@ -413,7 +417,7 @@ public class WaveFunctionCollapse : MonoBehaviour
     {
         cells.Clear();
         activeCells.Clear();
-        for(int i = this.transform.childCount - 1; i >= 0; i--)
+        for (int i = this.transform.childCount - 1; i >= 0; i--)
         {
             DestroyImmediate(this.transform.GetChild(i).gameObject);
         }
@@ -421,7 +425,7 @@ public class WaveFunctionCollapse : MonoBehaviour
 
     private void ReplacePrototypeAt(Vector2Int coords, List<Prototype> replacements)
     {
-        
+
         if (replacements == null || replacements.Count == 0) return;
 
         Vector2 key = new Vector2(coords.x, coords.y);
@@ -440,7 +444,7 @@ public class WaveFunctionCollapse : MonoBehaviour
             Debug.LogError("❌ MISSING PREFAB on prototype: " + newProto.name);
             return;
         }
-        
+
 
         cell.possiblePrototypes.Clear();
         cell.possiblePrototypes.Add(newProto);
@@ -452,7 +456,7 @@ public class WaveFunctionCollapse : MonoBehaviour
         finalPrefab.transform.Rotate(0f, newProto.meshRotation * 90, 0f, Space.Self);
         finalPrefab.transform.localPosition = Vector3.zero;
 
-        
+
     }
 
 }
